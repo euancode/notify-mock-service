@@ -198,6 +198,11 @@ p.lede {
   font-size: 13px;
   background: #fafafa;
   animation: slidein 0.25s ease-out;
+  cursor: pointer;
+}
+
+.feed-item:hover {
+  background: #f2f2f2;
 }
 
 .feed-item.method-GET {
@@ -222,6 +227,67 @@ p.lede {
 
 .feed-item__time {
   color: var(--govuk-grey);
+}
+
+.feed-item__status {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.feed-item__status.status-pending {
+  background: var(--govuk-light-grey);
+  color: var(--govuk-grey);
+}
+
+.feed-item__status.status-2xx {
+  background: #d4f5df;
+  color: var(--govuk-green);
+}
+
+.feed-item__status.status-4xx {
+  background: #f8d7d3;
+  color: var(--govuk-red);
+}
+
+.feed-item__status.status-other {
+  background: #fff3cd;
+  color: #7a5b00;
+}
+
+.feed-item__hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--govuk-blue);
+}
+
+.feed-item__details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--govuk-border);
+}
+
+.feed-item__details-label {
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.feed-item__errors {
+  background: #f8d7d3;
+  border-left: 4px solid var(--govuk-red);
+  border-radius: 3px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+
+.feed-item__errors ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
 }
 
 .feed-item pre {

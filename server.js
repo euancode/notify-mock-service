@@ -24,18 +24,39 @@ function broadcast(event) {
   });
 }
 
-// Log every call under /v2 to the dashboard feed, regardless of outcome.
+// Log every call under /v2 to the dashboard feed, and its eventual response,
+// regardless of outcome - lets the dashboard show request/response pairs.
 app.use('/v2', (req, res, next) => {
   const authHeader = req.headers['authorization'];
+  const requestId = crypto.randomUUID();
+  req.notifyRequestId = requestId;
+
   broadcast({
     type: 'request',
-    id: crypto.randomUUID(),
+    id: requestId,
     timestamp: new Date().toISOString(),
     method: req.method,
     path: req.originalUrl,
     authorization: authHeader ? maskToken(authHeader.replace(/^Bearer\s+/i, '')) : null,
     body: req.body,
   });
+
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    res.locals.responseBody = body;
+    return originalJson(body);
+  };
+
+  res.on('finish', () => {
+    broadcast({
+      type: 'response',
+      id: requestId,
+      status: res.statusCode,
+      body: res.locals.responseBody,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   next();
 });
 
@@ -156,6 +177,19 @@ app.get('/healthcheck', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/docs', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+});
+
+// Malformed JSON bodies fail inside express.json() before reaching any route,
+// so without this they'd surface as an unhelpful HTML 400 instead of the
+// same Notify-style error shape everything else returns.
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      errors: [{ error: 'BadRequestError', message: 'Invalid JSON body' }],
+      status_code: 400,
+    });
+  }
+  next(err);
 });
 
 server.listen(PORT, () => {
