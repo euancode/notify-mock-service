@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GOV.UK Notify (mock) — Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="govuk-header">
+    <a class="govuk-header__brand" href="/">
+      <span class="govuk-header__crown">GOV.UK</span>
+      <span class="govuk-header__title">Notify <span class="govuk-header__mock-badge">MOCK</span></span>
+    </a>
+    <nav class="govuk-header__nav">
+      <a href="/" class="active">Dashboard</a>
+      <a href="/docs.html">API docs</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Live dashboard</h1>
+    <p class="lede">
+      Every call made to this mock's <code>/v2/notifications/*</code> API appears below as it happens,
+      and SMS messages show up on the phone in real time. Point your GOV.UK Notify client at this
+      server's base URL to try it out — see the <a href="/docs.html">API docs</a> for details.
+    </p>
+
+    <div class="status-strip">
+      <span class="dot" id="connDot"></span>
+      <span id="connText">Connecting…</span>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Incoming requests</h2>
+          <span class="count" id="requestCount">0</span>
+        </div>
+        <div class="feed" id="requestFeed">
+          <div class="feed-empty">No requests yet. Send a notification to see it appear here.</div>
+        </div>
+      </section>
+
+      <section class="phone-column">
+        <div class="panel phone-wrap">
+          <h2>Incoming SMS</h2>
+          <div class="phone">
+            <div class="phone__notch"></div>
+            <div class="phone__screen">
+              <div class="phone__statusbar">
+                <span id="clock">--:--</span>
+                <span>●●● 5G 100%</span>
+              </div>
+              <div class="phone__lockclock">
+                <div class="time" id="bigClock">--:--</div>
+                <div class="date" id="bigDate">—</div>
+              </div>
+              <div class="phone__notifications" id="phoneNotifications">
+                <div class="phone-placeholder">Waiting for an SMS notification via the API…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel email-panel">
+          <div class="panel-header">
+            <h2>Recent emails</h2>
+            <span class="count" id="emailCount">0</span>
+          </div>
+          <div class="email-list" id="emailList">
+            <div class="feed-empty">No emails yet.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>Mock GOV.UK Notify service — not affiliated with GOV.UK or the Government Digital Service.</footer>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GOV.UK Notify (mock) — API docs</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="govuk-header">
+    <a class="govuk-header__brand" href="/">
+      <span class="govuk-header__crown">GOV.UK</span>
+      <span class="govuk-header__title">Notify <span class="govuk-header__mock-badge">MOCK</span></span>
+    </a>
+    <nav class="govuk-header__nav">
+      <a href="/">Dashboard</a>
+      <a href="/docs.html" class="active">API docs</a>
+    </nav>
+  </header>
+
+  <main class="docs">
+    <h1>API documentation</h1>
+    <p class="lede">
+      This service mimics the subset of the
+      <a href="https://docs.notifications.service.gov.uk/rest-api.html">GOV.UK Notify REST API</a>
+      needed to send and track SMS and email notifications, so you can develop and test against it
+      without a real Notify account. Responses are shaped the same as the real API, but delivery is
+      simulated locally — nothing is actually sent.
+    </p>
+
+    <div class="callout">
+      <strong>Base URL:</strong> <code id="baseUrl">https://your-deployment.example.com</code> — replace with
+      wherever you've deployed this service (or <code>http://localhost:3000</code> when running locally).
+    </div>
+
+    <h2>Authentication</h2>
+    <p>
+      The real Notify API requires a <code>Authorization: Bearer &lt;jwt&gt;</code> header, where the JWT is
+      signed with your API key's secret. This mock does not cryptographically verify that signature — it only
+      requires that an <code>Authorization</code> header is present. This means the official
+      <a href="https://docs.notifications.service.gov.uk/rest-api.html#client-libraries">Notify client libraries</a>
+      (Node, Python, .NET, etc.) work against this server unchanged: just point their base URL here and use
+      any API key value.
+    </p>
+    <table>
+      <tr><th>Header</th><th>Required</th><th>Notes</th></tr>
+      <tr>
+        <td><code>Authorization</code></td>
+        <td>Yes</td>
+        <td>Any value accepted, e.g. <code>Bearer test_key-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000</code>. Missing header returns <code>401</code>.</td>
+      </tr>
+    </table>
+
+    <h2>Send an SMS</h2>
+    <span class="method-tag post">POST</span><span class="endpoint">/v2/notifications/sms</span>
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>phone_number</code></td><td>string</td><td>Yes</td><td>Recipient phone number, e.g. <code>+447700900000</code>.</td></tr>
+      <tr><td><code>template_id</code></td><td>string (uuid)</td><td>Yes</td><td>One of the seeded template IDs below, or any UUID (an ad-hoc template is created on the fly).</td></tr>
+      <tr><td><code>personalisation</code></td><td>object</td><td>If the template needs it</td><td>Key/value pairs substituted into <code>((placeholders))</code> in the template body.</td></tr>
+      <tr><td><code>reference</code></td><td>string</td><td>No</td><td>Your own identifier, echoed back and filterable via <code>GET /v2/notifications</code>.</td></tr>
+    </table>
+
+    <pre>curl -X POST https://your-deployment.example.com/v2/notifications/sms \
+  -H "Authorization: Bearer test_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+447700900000",
+    "template_id": "8a5e1b3a-0000-4000-8000-000000000001",
+    "personalisation": { "code": "482913" },
+    "reference": "signup-482913"
+  }'</pre>
+
+    <pre>{
+  "id": "b6c1...",
+  "reference": "signup-482913",
+  "content": {
+    "body": "Your verification code is 482913. It expires in 5 minutes.",
+    "from_number": "GOVUK"
+  },
+  "uri": "https://your-deployment.example.com/v2/notifications/b6c1...",
+  "template": {
+    "id": "8a5e1b3a-0000-4000-8000-000000000001",
+    "version": 1,
+    "uri": "https://your-deployment.example.com/v2/template/8a5e1b3a-0000-4000-8000-000000000001"
+  }
+}</pre>
+
+    <p>Watch the <a href="/">dashboard</a> after sending — the message appears on the mock phone within a second.</p>
+
+    <h2>Send an email</h2>
+    <span class="method-tag post">POST</span><span class="endpoint">/v2/notifications/email</span>
+    <table>
+      <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>email_address</code></td><td>string</td><td>Yes</td><td>Recipient email address.</td></tr>
+      <tr><td><code>template_id</code></td><td>string (uuid)</td><td>Yes</td><td>One of the seeded template IDs below, or any UUID.</td></tr>
+      <tr><td><code>personalisation</code></td><td>object</td><td>If the template needs it</td><td>Substituted into the template body and subject.</td></tr>
+      <tr><td><code>reference</code></td><td>string</td><td>No</td><td>Your own identifier.</td></tr>
+    </table>
+
+    <pre>curl -X POST https://your-deployment.example.com/v2/notifications/email \
+  -H "Authorization: Bearer test_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email_address": "citizen@example.com",
+    "template_id": "8a5e1b3a-0000-4000-8000-000000000003",
+    "personalisation": { "first_name": "Alex", "reference": "REF-9821" }
+  }'</pre>
+
+    <h2>Get a single notification</h2>
+    <span class="method-tag get">GET</span><span class="endpoint">/v2/notifications/{id}</span>
+    <p>Returns the current status of a previously created notification.</p>
+    <pre>{
+  "id": "b6c1...",
+  "reference": "signup-482913",
+  "type": "sms",
+  "status": "delivered",
+  "phone_number": "+447700900000",
+  "body": "Your verification code is 482913. It expires in 5 minutes.",
+  "template": { "id": "8a5e1b3a-0000-4000-8000-000000000001", "version": 1, "uri": "..." },
+  "created_at": "2026-07-10T09:00:00.000Z",
+  "sent_at": "2026-07-10T09:00:01.200Z",
+  "completed_at": "2026-07-10T09:00:04.100Z"
+}</pre>
+
+    <h2>List notifications</h2>
+    <span class="method-tag get">GET</span><span class="endpoint">/v2/notifications</span>
+    <p>Supports optional query filters: <code>status</code>, <code>template_type</code> (<code>sms</code>/<code>email</code>), <code>reference</code>.</p>
+    <pre>GET /v2/notifications?status=delivered&template_type=sms</pre>
+
+    <h2>Templates</h2>
+    <span class="method-tag get">GET</span><span class="endpoint">/v2/templates</span>
+    <span class="method-tag get">GET</span><span class="endpoint">/v2/template/{id}</span>
+    <span class="method-tag post">POST</span><span class="endpoint">/v2/template/{id}/preview</span>
+    <p>Seeded templates available out of the box:</p>
+    <table>
+      <tr><th>ID</th><th>Type</th><th>Name</th><th>Placeholders</th></tr>
+      <tr><td><code>8a5e1b3a-0000-4000-8000-000000000001</code></td><td>sms</td><td>Verification code</td><td><code>code</code></td></tr>
+      <tr><td><code>8a5e1b3a-0000-4000-8000-000000000002</code></td><td>sms</td><td>Appointment reminder</td><td><code>first_name</code>, <code>appointment_date</code>, <code>appointment_time</code></td></tr>
+      <tr><td><code>8a5e1b3a-0000-4000-8000-000000000003</code></td><td>email</td><td>Welcome email</td><td><code>first_name</code>, <code>reference</code></td></tr>
+      <tr><td><code>8a5e1b3a-0000-4000-8000-000000000004</code></td><td>email</td><td>Password reset</td><td><code>first_name</code>, <code>reset_link</code></td></tr>
+    </table>
+    <p>Using any other UUID as <code>template_id</code> creates an ad-hoc template on the fly, expecting a
+      <code>message</code> personalisation field (and <code>subject</code> for email).</p>
+
+    <h2>Notification lifecycle</h2>
+    <p>
+      Every created notification moves through statuses automatically, roughly matching real-world timing and
+      outcome distribution:
+    </p>
+    <table>
+      <tr><th>Status</th><th>When</th></tr>
+      <tr><td><code>created</code></td><td>Immediately on creation.</td></tr>
+      <tr><td><code>sending</code></td><td>~0.6–1.5s later.</td></tr>
+      <tr><td><code>delivered</code></td><td>Most common final state (~88% of notifications), a few seconds after <code>sending</code>.</td></tr>
+      <tr><td><code>permanent-failure</code> / <code>temporary-failure</code> / <code>technical-failure</code></td><td>Randomly assigned to the remaining ~12%, to help you test failure handling.</td></tr>
+    </table>
+
+    <div class="callout warning">
+      <strong>Mock-only feature:</strong> to force a specific outcome instead of the random one, add
+      <code>_mock_status</code> to your <code>personalisation</code> object, e.g.
+      <code>"personalisation": { "_mock_status": "permanent-failure" }</code>. This key is stripped before
+      template rendering and isn't part of the real Notify API.
+    </div>
+
+    <h2>Errors</h2>
+    <p>Error responses match the real API's shape:</p>
+    <pre>{
+  "errors": [
+    { "error": "ValidationError", "message": "phone_number is a required property" }
+  ],
+  "status_code": 400
+}</pre>
+    <table>
+      <tr><th>Status</th><th>Cause</th></tr>
+      <tr><td>400</td><td>Missing/invalid <code>phone_number</code>, <code>email_address</code>, <code>template_id</code>, or missing personalisation values required by the template.</td></tr>
+      <tr><td>401</td><td>Missing <code>Authorization</code> header.</td></tr>
+      <tr><td>404</td><td>Notification or template ID not found.</td></tr>
+    </table>
+
+    <h2>What isn't mocked</h2>
+    <ul>
+      <li>No real SMS/email is ever sent — everything is simulated in memory.</li>
+      <li>Notification and template data is not persisted; it resets whenever the server restarts.</li>
+      <li>Letters, precompiled PDF letters, and the "received text messages" inbound SMS API aren't implemented.</li>
+      <li>API key signatures aren't cryptographically verified.</li>
+    </ul>
+  </main>
+
+  <footer>Mock GOV.UK Notify service — not affiliated with GOV.UK or the Government Digital Service.</footer>
+</body>
+</html>
