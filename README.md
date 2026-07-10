@@ -7,11 +7,23 @@ on the docs page. Nothing is really sent — delivery is simulated in memory.
 
 ## Deploy
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/euancode/notify-mock-service)
+Deploy to Render from the command line:
 
-Render's free tier needs no configuration beyond clicking the button — it reads `render.yaml` and
-deploys the app automatically. (Free-tier services sleep after inactivity and take a few seconds to
-wake back up on the next request.)
+```bash
+RENDER_API_KEY=rnd_xxx npm run deploy:render
+```
+
+Get an API key from https://dashboard.render.com/u/settings#api-keys, then run the command above.
+It creates a free-tier web service pointed at this repo/branch (or triggers a redeploy if the
+service already exists) via the Render API — no dashboard clicking required. Optional env vars:
+
+- `RENDER_OWNER_ID` — only needed if your Render account has more than one workspace
+- `RENDER_REPO_URL` / `RENDER_BRANCH` — override the auto-detected git remote/branch
+
+Prefer a GUI? Use the [Render Blueprint button](https://render.com/deploy?repo=https://github.com/euancode/notify-mock-service)
+instead — it reads the same `render.yaml`.
+
+Free-tier services sleep after inactivity and take a few seconds to wake back up on the next request.
 
 ## Run locally
 
