@@ -25,6 +25,19 @@ instead — it reads the same `render.yaml`.
 
 Free-tier services sleep after inactivity and take a few seconds to wake back up on the next request.
 
+### Quick public demo, no signup
+
+To share a running instance without creating any hosting account at all, run:
+
+```bash
+npm run tunnel
+```
+
+This starts the service locally and opens a free [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+to it (requires the `cloudflared` CLI — the script prints install instructions if it's missing).
+It prints a public `https://*.trycloudflare.com` URL for the dashboard and docs. The tunnel only
+lasts as long as this command keeps running, and isn't meant for permanent hosting.
+
 ## Run locally
 
 ```bash
