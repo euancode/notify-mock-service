@@ -26,10 +26,18 @@ function broadcast(event) {
 
 // Log every call under /v2 to the dashboard feed, and its eventual response,
 // regardless of outcome - lets the dashboard show request/response pairs.
+const DISPLAYED_HEADERS = ['host', 'user-agent', 'content-type', 'content-length', 'accept'];
+
 app.use('/v2', (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const requestId = crypto.randomUUID();
   req.notifyRequestId = requestId;
+
+  const headers = {};
+  for (const name of DISPLAYED_HEADERS) {
+    if (req.headers[name] !== undefined) headers[name] = req.headers[name];
+  }
+  if (authHeader) headers['authorization'] = `Bearer ${maskToken(authHeader.replace(/^Bearer\s+/i, ''))}`;
 
   broadcast({
     type: 'request',
@@ -37,7 +45,9 @@ app.use('/v2', (req, res, next) => {
     timestamp: new Date().toISOString(),
     method: req.method,
     path: req.originalUrl,
+    ip: req.ip,
     authorization: authHeader ? maskToken(authHeader.replace(/^Bearer\s+/i, '')) : null,
+    headers,
     body: req.body,
   });
 
