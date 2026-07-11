@@ -62,6 +62,25 @@
     `;
   }
 
+  function headersListHtml(headers) {
+    if (!headers || !Object.keys(headers).length) return '';
+    const rows = Object.entries(headers)
+      .map(([key, value]) => `<div><span class="feed-item__header-key">${escapeHtml(key)}:</span> ${escapeHtml(value)}</div>`)
+      .join('');
+    return `<div class="feed-item__headers">${rows}</div>`;
+  }
+
+  function requestDetailsHtml(entry) {
+    const bodyStr = entry.body && Object.keys(entry.body).length
+      ? JSON.stringify(entry.body, null, 2)
+      : null;
+    return `
+      <div class="feed-item__details-label">Request${entry.ip ? ` &mdash; from ${escapeHtml(entry.ip)}` : ''}</div>
+      ${headersListHtml(entry.headers)}
+      ${bodyStr ? `<pre>${escapeHtml(bodyStr)}</pre>` : '<div class="feed-item__no-body">(no request body)</div>'}
+    `;
+  }
+
   function addRequestToFeed(entry) {
     const empty = requestFeed.querySelector('.feed-empty');
     if (empty) empty.remove();
@@ -72,9 +91,6 @@
     const item = document.createElement('div');
     item.className = `feed-item method-${entry.method}`;
     item.dataset.id = entry.id;
-    const bodyStr = entry.body && Object.keys(entry.body).length
-      ? JSON.stringify(entry.body, null, 2)
-      : null;
 
     item.innerHTML = `
       <div class="feed-item__top">
@@ -82,11 +98,10 @@
         <span class="feed-item__status status-pending" data-role="status">pending</span>
         <span class="feed-item__time">${formatTime(entry.timestamp)}</span>
       </div>
-      ${entry.authorization ? `<div style="color:#505a5f">Authorization: Bearer ${escapeHtml(entry.authorization)}</div>` : ''}
-      ${bodyStr ? `<pre>${escapeHtml(bodyStr)}</pre>` : ''}
-      <div class="feed-item__hint" data-role="hint">Click to view response &#9656;</div>
+      <div class="feed-item__hint" data-role="hint">Click to view request &amp; response &#9656;</div>
       <div class="feed-item__details" data-role="details" hidden>
-        <div class="feed-item__details-label">Waiting for response&hellip;</div>
+        ${requestDetailsHtml(entry)}
+        <div class="feed-item__details-label" data-role="response-label">Waiting for response&hellip;</div>
       </div>
     `;
 
@@ -95,7 +110,7 @@
       const hint = item.querySelector('[data-role="hint"]');
       const nowHidden = !details.hidden;
       details.hidden = nowHidden;
-      hint.innerHTML = nowHidden ? 'Click to view response &#9656;' : 'Click to hide response &#9662;';
+      hint.innerHTML = nowHidden ? 'Click to view request &amp; response &#9656;' : 'Click to hide &#9662;';
     });
 
     requestFeed.prepend(item);
@@ -113,9 +128,9 @@
     statusEl.textContent = response.status;
     statusEl.className = `feed-item__status ${statusBadgeClass(response.status)}`;
 
-    const details = item.querySelector('[data-role="details"]');
+    const responseLabel = item.querySelector('[data-role="response-label"]');
     const bodyStr = response.body ? JSON.stringify(response.body, null, 2) : '(empty response)';
-    details.innerHTML = `
+    responseLabel.outerHTML = `
       <div class="feed-item__details-label">Response &mdash; ${response.status}</div>
       ${response.status >= 400 ? errorsCalloutHtml(response.body) : ''}
       <pre>${escapeHtml(bodyStr)}</pre>
